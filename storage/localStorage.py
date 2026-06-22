@@ -1,32 +1,32 @@
 import os
-import pandas
-from config.dir import user_dir,history_dir,exam_dir,metadata_dir,keyboard_dir
 import json
 
-class xlsxHandler:
-    
-    def __init__(self,dir):
-        self.dir = dir
-    
-    def readData(self):
-        return pandas.read_excel(self.dir)
-    
-    def readStructure(self):
-        return  pandas.read_excel(self.dir, nrows=1)
-    
-    def dumpd_data(self):
-        history_dir.to_excel(self.dir, index=False)
-    
-    def truncate(self):
-            df = pandas.read_excel(self.dir)
-            df = pandas.DataFrame(columns=df.columns)
-            df.to_excel(self.dir, index=False)
+import pandas
 
-    def append_data(self,new_df):
-            df_excel = pandas.read_excel(self.dir)
-            result = pandas.concat([df_excel, new_df], ignore_index=True)
-            print(result)
-            result.to_excel(self.dir, index=False)
+from config.dir import user_dir, history_dir, exam_dir, metadata_dir, keyboard_dir
+from config.constant import USER_COLUMNS, HISTORY_COLUMNS
+
+
+class CsvHandler:
+
+    def __init__(self, dir):
+        self.dir = dir
+
+    def readData(self):
+        return pandas.read_csv(self.dir)
+
+    def readStructure(self):
+        return pandas.read_csv(self.dir, nrows=1)
+
+    def truncate(self):
+        df = pandas.read_csv(self.dir)
+        df = pandas.DataFrame(columns=df.columns)
+        df.to_csv(self.dir, index=False)
+
+    def append_data(self, new_df):
+        df_csv = pandas.read_csv(self.dir)
+        result = pandas.concat([df_csv, new_df], ignore_index=True)
+        result.to_csv(self.dir, index=False)
 
 
 class JsonHandler:
@@ -53,55 +53,65 @@ class JsonHandler:
         self.write_data(existing_data)
 
 
-
 class DataHandaler:
     def __init__(self):
+        # The participant-data files are runtime output (git-ignored); create
+        # them with their canonical headers on first run so a fresh checkout works.
+        self._ensure_seed_files()
 
-        self.user_data_handaler =xlsxHandler(dir=user_dir)
-        self.history_data_handaler =xlsxHandler(dir=history_dir)
-        self.exam_data_handler = xlsxHandler(dir=exam_dir)
+        self.user_data_handaler = CsvHandler(dir=user_dir)
+        self.history_data_handaler = CsvHandler(dir=history_dir)
+        self.exam_data_handler = CsvHandler(dir=exam_dir)
         self.metadata_handler = JsonHandler(dir=metadata_dir)
 
+    @staticmethod
+    def _ensure_seed_files():
+        for path, columns in ((user_dir, USER_COLUMNS), (history_dir, HISTORY_COLUMNS)):
+            if not os.path.exists(path):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                pandas.DataFrame(columns=columns).to_csv(path, index=False)
+
     def get_new_sessionId(self):
-        user_df =  self.user_data_handaler.readData()
+        user_df = self.user_data_handaler.readData()
         if user_df.empty:
             return 1
         max_value = user_df['participantID'].max()
         return int(max_value) + 1
-    
+
     def get_exam(self):
-        return pandas.read_excel(exam_dir)
-    
+        return pandas.read_csv(exam_dir)
+
     def get_user(self):
         return self.user_data_handaler.readData()
-    
-    def append_history_data(self,new_df):
+
+    def append_history_data(self, new_df):
         self.history_data_handaler.append_data(new_df=new_df)
 
-    def append_user_data(self,new_df):
+    def append_user_data(self, new_df):
         self.user_data_handaler.append_data(new_df=new_df)
-        
+
     def readStructure_user(self):
-        return  self.user_data_handaler.readStructure()
-    
+        return self.user_data_handaler.readStructure()
+
     def resetHistory(self):
         self.user_data_handaler.truncate()
         self.history_data_handaler.truncate()
-    
+
     def loadMetaData(self):
-        return self.metadata_handler.read_data(metadata_dir)
-    
-    def saveMetaData(self,data_dict):
+        return self.metadata_handler.read_data()
+
+    def saveMetaData(self, data_dict):
         self.metadata_handler.write_data(data_dict)
-    
+
     def getKeyboardList(self):
         setting_dict = self.metadata_handler.read_data()
-        tmp_excel_handler = xlsxHandler(dir = os.path.join(keyboard_dir,setting_dict['selected_keyboard_layout']))
-        df = tmp_excel_handler.readData()
+        tmp_csv_handler = CsvHandler(dir=os.path.join(keyboard_dir, setting_dict['selected_keyboard_layout']))
+        df = tmp_csv_handler.readData()
         return df['label'].to_list()
-    
-    def getSimilarities(self):
-        setting_dict = self.metadata_handler.read_data()       
-        return  list(range(1, int( setting_dict['selected_similarity']) + 1))
 
-dataHandaler= DataHandaler()
+    def getSimilarities(self):
+        setting_dict = self.metadata_handler.read_data()
+        return list(range(1, int(setting_dict['selected_similarity']) + 1))
+
+
+dataHandaler = DataHandaler()

@@ -1,16 +1,16 @@
 class Answer:
-    def __init__(self,id, question,similarity=-1,answer=-1):
+    def __init__(self, id, question, similarity=-1, answer=-1, audio=None):
         self.id = id
-        self.question = question
+        self.question = question      # stimulus identifier (serializable, e.g. the audio path)
+        self.audio = audio            # pydub AudioSegment used for playback
         self.answer = answer
         self.similarity = similarity
-    
 
-    # Setter method for 'answer'
+    # Setter method for 'id'
     def set_id(self, id):
         self.id = id
 
-    # Getter method for 'answer'
+    # Getter method for 'id'
     def get_id(self):
         return self.id
 
@@ -37,13 +37,21 @@ class Answer:
     # Getter method for 'question'
     def get_question(self):
         return self.question
-    
+
+    # Setter method for 'audio'
+    def set_audio(self, audio):
+        self.audio = audio
+
+    # Getter method for 'audio'
+    def get_audio(self):
+        return self.audio
+
     def to_dict(self):
         """
-        Convert the Answer object to a dictionary.
+        Convert the Answer object to a dictionary for the history record.
         """
         return {
-            'question': self.id,
+            'question': self.question,
             'participants_ans': self.answer,
             'participants_evaluation': self.similarity
         }
