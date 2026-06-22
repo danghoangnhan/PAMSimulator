@@ -1,0 +1,46 @@
+# Dependabot keeps Python (uv) and GitHub Actions dependencies up to date.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+# uv support (package-ecosystem: "uv") is GA — Dependabot bumps uv.lock and the
+# version constraints declared in pyproject.toml.
+version: 2
+updates:
+  # Python dependencies managed by uv (pyproject.toml + uv.lock)
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Taipei"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      # Roll routine updates into a single PR to cut review noise.
+      python-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions used by the CI workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Taipei"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

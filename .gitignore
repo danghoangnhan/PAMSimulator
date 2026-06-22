@@ -5,14 +5,18 @@ dist/
 *.icns
 *.mp3
 venv
+.venv/
 prompt.txt
 component/__pycache__
 config/__pycache__
-static/csv
 Lib
 libs
 Scripts
 share
-static
 pyvenv.cfg
 include
+
+# Runtime participant data — auto-seeded on first run and may contain PII.
+# These are program output, not fixtures, so they are not committed.
+static/csv/user.csv
+static/csv/history.csv

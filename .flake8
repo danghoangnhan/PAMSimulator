@@ -1,0 +1,5 @@
+[flake8]
+# Don't lint the uv-managed virtualenv or build output — only our own code.
+exclude = .venv,.git,__pycache__,build,dist,*.egg-info
+max-line-length = 127
+max-complexity = 10
