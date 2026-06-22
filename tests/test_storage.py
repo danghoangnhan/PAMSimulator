@@ -7,7 +7,7 @@ from config.constant import USER_COLUMNS, HISTORY_COLUMNS
 def test_csvhandler_append_read_truncate_roundtrip(tmp_path):
     csv = tmp_path / "history.csv"
     pd.DataFrame(columns=HISTORY_COLUMNS).to_csv(csv, index=False)
-    handler = CsvHandler(dir=str(csv))
+    handler = CsvHandler(path=str(csv))
 
     handler.append_data(pd.DataFrame([
         {"question": "pa.wav", "participants_ans": "ㄅ",
@@ -24,7 +24,7 @@ def test_csvhandler_append_read_truncate_roundtrip(tmp_path):
 
 def test_jsonhandler_read_write_missing(tmp_path):
     path = tmp_path / "default.json"
-    handler = JsonHandler(dir=str(path))
+    handler = JsonHandler(path=str(path))
     assert handler.read_data() is None  # missing file returns None, not a crash
     handler.write_data({"selected_similarity": 5, "selected_keyboard_layout": "bopomofo.csv"})
     assert handler.read_data()["selected_similarity"] == 5

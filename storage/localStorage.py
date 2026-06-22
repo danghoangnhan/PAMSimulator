@@ -1,3 +1,4 @@
+"""Persistence helpers for the CSV experiment data and JSON settings."""
 import os
 import json
 
@@ -8,41 +9,44 @@ from config.constant import USER_COLUMNS, HISTORY_COLUMNS
 
 
 class CsvHandler:
+    """Read/write helper around a single CSV data file."""
 
-    def __init__(self, dir):
-        self.dir = dir
+    def __init__(self, path):
+        self.path = path
 
     def readData(self):
-        return pandas.read_csv(self.dir)
+        return pandas.read_csv(self.path)
 
     def readStructure(self):
-        return pandas.read_csv(self.dir, nrows=1)
+        return pandas.read_csv(self.path, nrows=1)
 
     def truncate(self):
-        df = pandas.read_csv(self.dir)
+        df = pandas.read_csv(self.path)
         df = pandas.DataFrame(columns=df.columns)
-        df.to_csv(self.dir, index=False)
+        df.to_csv(self.path, index=False)
 
     def append_data(self, new_df):
-        df_csv = pandas.read_csv(self.dir)
+        df_csv = pandas.read_csv(self.path)
         result = pandas.concat([df_csv, new_df], ignore_index=True)
-        result.to_csv(self.dir, index=False)
+        result.to_csv(self.path, index=False)
 
 
 class JsonHandler:
-    def __init__(self, dir):
-        self.dir = dir
+    """Read/write helper around a single JSON settings file."""
+
+    def __init__(self, path):
+        self.path = path
 
     def read_data(self):
         try:
-            with open(self.dir, 'r') as file:
+            with open(self.path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
             return data
         except FileNotFoundError:
             return None
 
     def write_data(self, data):
-        with open(self.dir, 'w') as file:
+        with open(self.path, 'w', encoding='utf-8') as file:
             json.dump(data, file, indent=4)
 
     def append_data(self, new_data):
@@ -54,15 +58,17 @@ class JsonHandler:
 
 
 class DataHandaler:
+    """Facade over the experiment's CSV/JSON files used by the UI."""
+
     def __init__(self):
         # The participant-data files are runtime output (git-ignored); create
         # them with their canonical headers on first run so a fresh checkout works.
         self._ensure_seed_files()
 
-        self.user_data_handaler = CsvHandler(dir=user_dir)
-        self.history_data_handaler = CsvHandler(dir=history_dir)
-        self.exam_data_handler = CsvHandler(dir=exam_dir)
-        self.metadata_handler = JsonHandler(dir=metadata_dir)
+        self.user_data_handaler = CsvHandler(path=user_dir)
+        self.history_data_handaler = CsvHandler(path=history_dir)
+        self.exam_data_handler = CsvHandler(path=exam_dir)
+        self.metadata_handler = JsonHandler(path=metadata_dir)
 
     @staticmethod
     def _ensure_seed_files():
@@ -105,9 +111,8 @@ class DataHandaler:
 
     def getKeyboardList(self):
         setting_dict = self.metadata_handler.read_data()
-        tmp_csv_handler = CsvHandler(dir=os.path.join(keyboard_dir, setting_dict['selected_keyboard_layout']))
-        df = tmp_csv_handler.readData()
-        return df['label'].to_list()
+        layout = CsvHandler(path=os.path.join(keyboard_dir, setting_dict['selected_keyboard_layout']))
+        return layout.readData()['label'].to_list()
 
     def getSimilarities(self):
         setting_dict = self.metadata_handler.read_data()

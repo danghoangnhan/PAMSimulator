@@ -1,0 +1,8 @@
+---
+# Don't run static analysis on test files (Bandit flags every pytest `assert`
+# as a security issue), the bundled data fixtures, or build output.
+exclude_paths:
+  - 'tests/**'
+  - 'static/**'
+  - 'build/**'
+  - 'dist/**'
