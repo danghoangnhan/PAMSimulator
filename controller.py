@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QApplication
 import sys
 import logging
 from component.screen import StartScreen,TestScreen,UserInformationScreen,EndScreen,SettingScreen
+from model.session import currentSession
 
 class Navigator:
     def __init__(self,screen_height:int =1200,screen_width:int = 800):
@@ -27,6 +28,8 @@ class Navigator:
         
 
     def navigate_to_start_screen(self):
+        # Clear the previous participant's session so their data can't leak into the next run.
+        currentSession.set_user_info(None)
         self.close_all()
         self.start_screen = StartScreen(navigator=self,screen_height=self.screen_height,screen_width=self.screen_width)
         self.start_screen.show()

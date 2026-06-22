@@ -138,17 +138,16 @@ class TestScreen(QWidget):
 
     def play_sound(self):
         current_question:Answer = self.answerList[self.current_index]
-        play(current_question.get_question())
-        
+        play(current_question.get_audio())
+
 
     def loadQuestion(self, audio_dir)->List[Answer]:
         question_df = dataHandaler.get_exam()
         quetionList = []
         for index, row in question_df.iterrows():
-            filename = row['path']
-            filename = os.path.join(audio_dir, filename)
-            sound_file = AudioSegment.from_file(file = os.path.join(audio_dir, filename))
-            answer = Answer(question=sound_file,id=index)
+            sound_path = os.path.join(audio_dir, row['path'])
+            sound_file = AudioSegment.from_file(file=sound_path)
+            answer = Answer(id=index, question=row['path'], audio=sound_file)
             quetionList.append(answer)
         random.shuffle(quetionList)
         return quetionList
@@ -179,22 +178,22 @@ class TestScreen(QWidget):
         self.navigator.navigate_to_end_screen()
 
     def submit_test(self):
-        for  question in self.answerList:
-            print(question.get_answer())
-            question.set_id(question.get_id()+1)
-            question.set_answer(question.get_answer() if question.get_answer()!= -1 else -1)
-            question.set_similarity(question.get_similarity() if question.get_similarity()!=-1 else -1)
+        user_info = currentSession.get_user_info()
+        if user_info is None:
+            logging.error("No participant information set; aborting submit.")
+            return
 
-        new_user_value = currentSession.get_user_info()
-        new_user_value["participantID"]=dataHandaler.get_new_sessionId()
+        # Derive the participant id once and reuse it for both records so they stay in sync.
+        session_id = dataHandaler.get_new_sessionId()
+
+        new_user_value = dict(user_info)
+        new_user_value["participantID"] = session_id
 
         new_history_value = pd.DataFrame([element.to_dict() for element in self.answerList])
-        new_history_value['participate_number'] = dataHandaler.get_new_sessionId()
+        new_history_value['participate_number'] = session_id
         new_history_value = new_history_value.sort_values(by='question')
-        
-        
+
         dataHandaler.append_history_data(new_history_value)
-        print(new_user_value)
         dataHandaler.append_user_data(pd.DataFrame([new_user_value]))
 
     def submit_session(self):
